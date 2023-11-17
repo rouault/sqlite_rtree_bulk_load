@@ -946,6 +946,7 @@ bool SQLITE_RTREE_BL_SYMBOL(sqlite_rtree_bl_from_feature_table)(
     if (!hStmt) {
         if (p_error_msg)
             *p_error_msg = my_sqlite3_strdup(sqlite3_errmsg(hDB));
+        SQLITE_RTREE_BL_SYMBOL(sqlite_rtree_bl_free)(t);
         return false;
     }
 
@@ -958,10 +959,8 @@ bool SQLITE_RTREE_BL_SYMBOL(sqlite_rtree_bl_from_feature_table)(
         const double miny = sqlite3_column_double(hStmt, 3);
         const double maxy = sqlite3_column_double(hStmt, 4);
         if (!SQLITE_RTREE_BL_SYMBOL(sqlite_rtree_bl_insert)(t, id, minx, miny, maxx, maxy)) {
-            sqlite3_finalize(hStmt);
-            if (p_error_msg)
-                *p_error_msg = my_sqlite3_strdup("not enough memory");
-            return false;
+            bMaxMemReached = true;
+            break;
         }
         if (max_ram_usage != 0 &&
             SQLITE_RTREE_BL_SYMBOL(sqlite_rtree_bl_ram_usage)(t) > max_ram_usage) {
